@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Datalog Community Detection</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            height: 90vh;
+        }
+
+        .sidebar {
+            flex: 0 0 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        #mynetwork {
+            width: 100%;
+            height: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .stat-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+            <h1>Community Detection</h1>
+            <p>Using <strong>Datalog</strong> & <strong>Soufflé</strong></p>
+
+            <button onclick="runAnalysis()">Run Detection</button>
+
+            <div id="stats" style="display:none">
+                <div class="stat-box">
+                    <div class="stat-value" id="modScore">-</div>
+                    <div class="stat-label">Modularity Score</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="commCount">-</div>
+                    <div class="stat-label">Communities Found</div>
+                </div>
+            </div>
+
+            <div style="margin-top: auto; font-size: 12px; color: #888;">
+                Algorithm: Connected Components<br>
+                Engine: Soufflé 2.x<br>
+                Backend: Python/Flask
+            </div>
+        </div>
+
+        <div class="main">
+            <div id="mynetwork"></div>
+            <div id="loading" class="loading">Processing Graph logic...</div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var network = null;
+
+        function runAnalysis() {
+            document.getElementById('loading').style.display = 'block';
+
+            fetch('/run', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    if (data.error) {
+                        alert("Error: " + data.error + "\n\nDetails: " + (data.details || ""));
+                        return;
+                    }
+
+                    // Update Stats
+                    document.getElementById('stats').style.display = 'block';
+                    document.getElementById('modScore').innerText = data.modularity;
+                    document.getElementById('commCount').innerText = data.community_count;
+
+                    // Render Graph
+                    renderGraph(data.nodes, data.edges);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('loading').style.display = 'none';
+                    alert("Request failed.");
+                });
+        }
+
+        function renderGraph(nodesData, edgesData) {
+            var container = document.getElementById('mynetwork');
+
+            // Generate colors for groups dynamically if needed, 
+            // but Vis.js handles groups automatically with default colors.
+
+            var data = {
+                nodes: new vis.DataSet(nodesData),
+                edges: new vis.DataSet(edgesData)
+            };
+
+            var options = {
+                nodes: {
+                    shape: 'dot',
+                    size: 16,
+                    font: { size: 14, color: '#000000' },
+                    borderWidth: 2
+                },
+                edges: {
+                    width: 1,
+                    color: { inherit: 'from', opacity: 0.6 }
+                },
+                physics: {
+                    stabilization: false,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        springConstant: 0.04,
+                        springLength: 95
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200
+                }
+            };
+
+            network = new vis.Network(container, data, options);
+        }
+    </script>
+</body>
+
+</html>

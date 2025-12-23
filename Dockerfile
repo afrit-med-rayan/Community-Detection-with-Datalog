@@ -23,10 +23,14 @@ WORKDIR /app
 
 # 4. Copy Project Files
 COPY requirements.txt .
-COPY . .
+COPY src/ /app/src/
 
 # 5. Install Python Dependencies
-RUN pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install --default-timeout=1000 --no-cache-dir -r requirements.txt
 
-# 6. Default Command
-CMD ["python3", "main.py"]
+# 6. Expose Web Port
+EXPOSE 5000
+
+# 7. Start Web Server
+CMD ["python3", "src/app.py"]

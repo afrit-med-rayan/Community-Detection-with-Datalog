@@ -1,0 +1,14 @@
+
+
+services:
+  bda-app:
+    build: .
+    container_name: bda-datalog-container
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+    environment:
+      - FLASK_DEBUG=1
+    restart: unless-stopped

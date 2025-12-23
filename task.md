@@ -9,7 +9,7 @@
     - [x] Define Core Datalog Logic & Rules <!-- id: 4 -->
     - [x] Design Application Workflow (Input/Output/Engine) <!-- id: 5 -->
     - [x] Write Sample Datalog Code for Label Propagation (`lpa_example.dl`) <!-- id: 6 -->
-- [x] **Application Implementation**
+- [x] **Application Implementation (CLI)**
     - [x] Create `parser.py` for CSV to Facts conversion <!-- id: 10 -->
     - [x] Create `visualizer.py` for plotting results <!-- id: 11 -->
     - [x] Update `main.py` to orchestrate the pipeline <!-- id: 7 -->
@@ -22,11 +22,20 @@
     - [x] Draft Full Academic Report (`report.md`) <!-- id: 16 -->
 - [x] **Containerization**
     - [x] Create `Dockerfile` for easy execution <!-- id: 17 -->
+    - [x] Fix Datalog compatibility issues <!-- id: 18 -->
 
-## 🚀 **Remaining Actions for User**
-- [ ] **Docker Execution**
-    - [ ] Run `docker build -t datalog-project .`
-    - [ ] Run `docker run -v ${PWD}/output:/app/output datalog-project`
-- [ ] **Final Polish**
-    - [ ] Update `report.md` Section 6 with REAL numbers from the Docker run
-    - [ ] Export `report.md` to PDF/Word for submission
+## 🌐 **Web Migration (New Requirement)**
+- [ ] **Infrastructure**
+    - [ ] Update `requirements.txt` with Flask <!-- id: 19 -->
+    - [ ] Update `Dockerfile` to expose port 5000 <!-- id: 20 -->
+- [ ] **Backend Development**
+    - [ ] Create `app.py` (Flask Server) <!-- id: 21 -->
+    - [ ] Implement API `/run` to execute Datalog on request <!-- id: 22 -->
+- [ ] **Frontend Development**
+    - [ ] Create `templates/index.html` with Vis.js <!-- id: 23 -->
+    - [ ] Add interactive physics/clustering controls <!-- id: 24 -->
+
+## 🎓 **Your Final Steps (Manual)**
+- [ ] **Execute Web App**
+    - Run `docker run -p 5000:5000 bda-datalog`
+    - Open `http://localhost:5000`

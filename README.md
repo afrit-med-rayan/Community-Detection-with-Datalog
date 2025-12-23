@@ -1,55 +1,45 @@
-# Community Detection with Datalog
+# Datalog Community Detection 🕸️
 
-A declarative approach to detecting communities in social networks using the Label Propagation Algorithm (LPA) and Soufflé.
+A robust Social Network Analysis (SNA) tool that uses Declarative Logic (**Datalog**) to identify communities in graphs. Now features a **Dynamic Web Interface**!
 
-## Project Structure
-```
-.
-├── lpa_algorithm.dl       # Datalog implementation of LPA
-├── main.py                # Main orchestrator script
-├── parser.py              # CSV to Datalog facts converter
-├── visualizer.py          # NetworkX-based visualization module
-├── data/
-│   └── karate.csv         # Sample dataset (generated on first run)
-├── facts/                 # Generated Datalog facts directory
-└── output/                # Analysis results and plots
-```
+## 📂 Project Structure
 
-## Prerequisites
+- **`src/`**: Source code (`app.py`, Datalog rules, visualization logic).
+- **`docs/`**: Academic report and technical specifications.
+- **`data/`**: Input datasets (e.g., `karate.csv`).
+- **`Dockerfile` / `docker-compose.yml`**: Container orchestration.
 
-1.  **Python 3.8+**
-    *   Required packages: `networkx`, `matplotlib`
-    *   `pip install networkx matplotlib`
+## 🚀 Quick Start (Docker Compose)
 
-2.  **Soufflé Datalog Engine**
-    *   **Ubuntu/WSL**: `sudo apt install souffle`
-    *   **Mac**: `brew install souffle`
-    *   **Source**: [https://souffle-lang.github.io/](https://souffle-lang.github.io/)
+The easiest way to run the project.
 
-## Usage
+1.  **Start the App**:
+    ```bash
+    docker-compose up --build
+    ```
 
-Run the main script. If no input is provided, it defaults to `data/karate.csv` (and creates it if missing):
+2.  **Access the Dashboard**:
+    Open **[http://localhost:5000](http://localhost:5000)** in your browser.
 
-```bash
-python main.py
-```
+## 🛠️ Manual Installation
 
-Or specify your own dataset:
+If you prefer running locally without Docker:
 
-```bash
-python main.py data/your_network.csv
-```
+**Prerequisites**:
+*   Python 3.8+
+*   [Soufflé Datalog Engine](https://souffle-lang.github.io/)
 
-## How It Works
+**Steps**:
+1.  Install dependencies: `pip install -r requirements.txt`
+2.  Run the server:
+    ```bash
+    python src/app.py
+    ```
 
-1.  **Parsing**: The Python script reads the Edge List CSV and generates fact files in `facts/` (`node.facts`, `edge.facts`).
-2.  **Logic**: Soufflé executes `lpa_algorithm.dl`.
-    *   Initializes every node with a unique label.
-    *   Iteratively updates labels to the most frequent neighbor label.
-    *   Calculates a Modularity score for the final partition.
-3.  **Visualization**: Python reads the output communities and generates `output/communities.png`.
+## 🧪 Algorithm
 
-## Algorithm Details
+We use a **Connected Components** algorithm implemented in pure Stratified Datalog (`src/cc_algorithm.dl`). This declarative approach ensures correctness and parallel scalability without complex imperative state management.
 
-*   **Label Propagation**: An efficient, near-linear time algorithm.
-*   **Modularity Calculation**: Implemented purely in Datalog using aggregation functions.
+## 📄 License
+
+Academic Project - Fall 2025.
