@@ -1,120 +1,37 @@
 // -----------------------------------------------------------------------------
-// Community Detection using Label Propagation Algorithm (LPA)
-// Engine: Soufflé (https://souffle-lang.github.io/)
+// Community Detection: Connected Components (Stratified)
+// Separation of Recursion and Aggregation to avoid Cyclic errors.
 // -----------------------------------------------------------------------------
 
-// -- Declarations --
-
-// Input: Directed edge from source to target
-.decl edge(source: symbol, target: symbol)
+.decl edge(x: symbol, y: symbol)
 .input edge
-
-// Input: Nodes in the graph
-.decl node(id: symbol)
+.decl node(x: symbol)
 .input node
-
-// Configuration parameters
 .decl config_max_iter(i: number)
 .input config_max_iter
 
-// -----------------------------------------------------------------------------
-// -- Pre-processing --
-
-// Make graph undirected for community detection
+// Basic Graph
 .decl link(x: symbol, y: symbol)
 link(X, Y) :- edge(X, Y).
 link(X, Y) :- edge(Y, X).
 
-// -----------------------------------------------------------------------------
-// -- Algorithm State --
+// 1. Recursive Reachability (Transitive Closure)
+// Note: efficient for small-medium graphs.
+.decl reachable(x: symbol, y: symbol)
+reachable(X, Y) :- link(X, Y).
+reachable(X, Z) :- reachable(X, Y), link(Y, Z).
+// Self-reachability
+reachable(X, X) :- node(X).
 
-// label(Node, CommunityLabel, Iteration)
-.decl label(n: symbol, l: symbol, i: number)
+// 2. Community Definition: The minimal Node ID in the reachable set.
+// This runs AFTER reachable is fully computed (Stratified).
+.decl community_ord(n: symbol, min_ord: number)
+community_ord(N, MinOrd) :-
+    node(N),
+    MinOrd = min ord(L) : { reachable(N, L) }.
 
-// 1. Initialization (Iter = 0): Each node is its own community
-label(N, N, 0) :- node(N).
-
-// -----------------------------------------------------------------------------
-// -- Recursive Step --
-
-// Helper: Count frequency of each label in neighbor set at step I
-.decl neighbor_label_freq(n: symbol, l: symbol, count: number, i: number)
-neighbor_label_freq(N, L, C, I) :-
-    link(N, Neighbor),
-    label(Neighbor, L, I),
-    C = count : { link(N, Neighbor2), label(Neighbor2, L, I) }.
-
-// Helper: Find max frequency for a node at step I
-.decl max_freq(n: symbol, max_c: number, i: number)
-max_freq(N, MaxC, I) :-
-    neighbor_label_freq(N, _, _, I),
-    MaxC = max C : { neighbor_label_freq(N, _, C, I) }.
-
-// Propagate: Choose the label with max frequency
-// Strategy for ties: Pick the lexicographically largest label (canonical Datalog approach)
-label(N, BestL, I + 1) :-
-    label(N, _, I),                // Exists at step I
-    I < MaxIter,
-    config_max_iter(MaxIter),
-    max_freq(N, MaxC, I),          // Find max freq count
-    neighbor_label_freq(N, BestL, MaxC, I), // Filter labels having that count
-    // Tie-breaking: Ensure we pick exactly one. 
-    // We pick L such that no other candidate label is "greater" than it.
-    BestL = max L : { neighbor_label_freq(N, L, MaxC, I) }.
-
-// -----------------------------------------------------------------------------
-// -- Output Extraction --
-
-// Get the final iteration number reaching stability or max
-.decl final_iter(i: number)
-final_iter(I) :- I = max Iter : { label(_, _, Iter) }.
-
-// Output the final community assignments
-.decl community(node: symbol, label: symbol)
+.decl community(n: symbol, l: symbol)
 .output community
-
-community(N, L) :- 
-    final_iter(I), 
-    label(N, L, I).
-
-// -----------------------------------------------------------------------------
-// -- Post-processing: Modularity Calculation --
-// Metric Q = sum_c ( e_c - a_c^2 )
-// where e_c = fraction of edges within community c
-//       a_c = fraction of edge ends attached to nodes in community c
-
-// 1. Calculate Node Degrees and Total Graph Edges (Doubled)
-.decl degree(n: symbol, k: float)
-degree(N, to_float(K)) :- node(N), K = count : { link(N, _) }.
-
-.decl stats_m_doubled(m2: float)
-stats_m_doubled(to_float(C)) :- C = count : { link(_, _) }.
-
-// 2. Per-Community Statistics
-.decl comm_stats(c: symbol, internal_edges_doubled: float, degree_sum: float)
-comm_stats(C, E_in, D_sum) :-
-    community(_, C),
-    // Sum of degrees of all nodes in this community
-    D_sum = sum K : { community(N, C), degree(N, K) },
-    // Count of edges (u, v) where BOTH u and v are in this community.
-    // We sum 1.0 for each such link.
-    E_in = sum 1.0 : { link(U, V), community(U, C), community(V, C) }.
-
-// 3. Modularity Contribution per Community
-.decl modularity_components(c: symbol, q_c: float)
-modularity_components(C, Q_c) :-
-    comm_stats(C, E_in, D_sum),
-    stats_m_doubled(M2),
-    // e_c = (E_in / M2)
-    // a_c = (D_sum / M2)
-    // Contribution = e_c - (a_c)^2
-    Ec = E_in / M2,
-    Ac = D_sum / M2,
-    Q_c = Ec - (Ac * Ac).
-
-// 4. Final Score
-.decl modularity_score(q: float)
-.output modularity_score
-modularity_score(Q) :-
-    Q = sum Qc : { modularity_components(_, Qc) }. 
-
+community(N, L) :-
+    community_ord(N, MinOrd),
+    L = to_string(MinOrd).

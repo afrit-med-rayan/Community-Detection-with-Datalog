@@ -8,7 +8,7 @@ from visualizer import plot_communities
 # Configuration
 FACTS_DIR = "facts"
 OUTPUT_DIR = "output"
-DATALOG_FILE = "lpa_algorithm.dl"
+DATALOG_FILE = "cc_algorithm.dl"
 
 def check_souffle():
     """Check if souffle is installed."""
@@ -70,14 +70,45 @@ def run_community_detection(input_file):
     except Exception as e:
         print(f"⚠ Visualization failed: {e}")
     
-    # Show modularity
-    modularity_file = os.path.join(OUTPUT_DIR, "modularity_score.csv")
-    if os.path.exists(modularity_file):
-        with open(modularity_file, 'r') as f:
-            content = f.read().strip()
-            print(f"\n[4/4] ✓ Modularity Score: {content}")
-    else:
-        print("\n⚠ No modularity score generated.")
+    # Calculate Modularity in Python
+    print("\n[4/4] Calculating Modularity...")
+    try:
+        import networkx as nx
+        import csv
+        
+        # Load Graph
+        G = nx.Graph()
+        with open(input_file, 'r') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if len(row) >= 2:
+                    if row[0].startswith('#') or row[0] == "source": continue
+                    G.add_edge(row[0].strip(), row[1].strip())
+        
+        # Load Communities
+        communities = {}
+        with open(community_output, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for row in reader:
+                if row:
+                    node, comm = row[0], row[1]
+                    if comm not in communities:
+                        communities[comm] = []
+                    communities[comm].append(node)
+        
+        comm_list = list(communities.values())
+        if comm_list:
+            mod_score = nx.community.modularity(G, comm_list)
+            print(f"✓ Modularity Score: {mod_score:.4f}")
+            
+            # Save to file for report
+            with open(os.path.join(OUTPUT_DIR, "modularity_score.txt"), "w") as f:
+                f.write(str(mod_score))
+        else:
+            print("⚠ No communities found.")
+            
+    except Exception as e:
+        print(f"⚠ Modularity calculation failed: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Datalog Community Detection")

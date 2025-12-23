@@ -1,0 +1,40 @@
+// -----------------------------------------------------------------------------
+// Community Detection: Connected Components (Pure Stratified Negation)
+// No Aggregators to ensures maximal compatibility.
+// -----------------------------------------------------------------------------
+
+.decl edge(x: symbol, y: symbol)
+.input edge
+.decl node(x: symbol)
+.input node
+.decl config_max_iter(i: number)
+.input config_max_iter
+
+// Basic Graph
+.decl link(x: symbol, y: symbol)
+link(X, Y) :- edge(X, Y).
+link(X, Y) :- edge(Y, X).
+
+// 1. Recursive Reachability
+.decl reachable(x: symbol, y: symbol)
+reachable(X, Y) :- link(X, Y).
+reachable(X, Z) :- reachable(X, Y), link(Y, Z).
+reachable(X, X) :- node(X).
+
+// 2. Min-Selection via Negation (Stratified)
+// Define: "Is there a smaller node Y reachable from X than Z?"
+.decl smaller_reachable_exists(x: symbol, z: symbol)
+smaller_reachable_exists(X, Z) :-
+    reachable(X, Y),
+    reachable(X, Z),
+    ord(Y) < ord(Z).
+
+// The Head of the component is the node Z for which NO smaller node Y is reachable
+.decl component_head(x: symbol, head: symbol)
+component_head(X, Z) :-
+    reachable(X, Z),
+    !smaller_reachable_exists(X, Z).
+
+.decl community(n: symbol, c: symbol)
+.output community
+community(N, C) :- component_head(N, C).
