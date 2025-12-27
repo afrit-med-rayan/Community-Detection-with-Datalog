@@ -1,0 +1,75 @@
+// src/modularity.dl
+// Calculates Modularity (Q) for the detected communities.
+// Formula: Q = sum_over_communities( (Lc / M) - (Dc / 2M)^2 )
+// where Lc = internal edges in community c
+//       Dc = sum of degrees of nodes in community c
+//       M  = total number of edges
+
+// --- Inputs ---
+.decl edge(x: symbol, y: symbol)
+.input edge(delimiter=",")
+
+.decl community(n: symbol, c: symbol)
+.input community(delimiter=",")
+
+// --- Outputs ---
+.decl modularity(q: float)
+.output modularity(delimiter=",")
+
+// --- Logic ---
+
+.decl link(x: symbol, y: symbol)
+link(X, Y) :- edge(X, Y).
+link(X, Y) :- edge(Y, X).
+
+// 1. Total Edges (M)
+// Since 'link' is undirected (double count), M = count(link) / 2
+.decl total_edges(m: float)
+total_edges(M) :-
+    C = count : { link(_, _) },
+    M = to_float(C) / 2.0.
+
+// 2. Node Degree
+.decl degree(n: symbol, d: float)
+degree(N, D) :-
+    link(N, _),
+    C = count : { link(N, _) },
+    D = to_float(C).
+
+// 3. Community Stats
+.decl community_edges(c: symbol, lc: float)
+community_edges(C, Lc) :-
+    community(_, C),
+    // Count internal edges logic:
+    // Sum edges (u,v) where both u,v are in C.
+    // Normalized by 2 because link is symmetric.
+    InternalLinks = count : { 
+        link(U, V), 
+        community(U, C), 
+        community(V, C) 
+    },
+    Lc = to_float(InternalLinks) / 2.0.
+
+.decl community_degree_sum(c: symbol, dc: float)
+community_degree_sum(C, Dc) :-
+    community(_, C),
+    Dc = sum D : {
+        community(N, C),
+        degree(N, D)
+    }.
+
+// 4. Calculate Contribution per Community
+.decl comm_contribution(c: symbol, val: float)
+comm_contribution(C, Val) :-
+    community_edges(C, Lc),
+    community_degree_sum(C, Dc),
+    total_edges(M),
+    M > 0.0,
+    // Formula terms
+    Term1 = Lc / M,
+    Term2 = (Dc / (2.0 * M)) ^ 2.0,
+    Val = Term1 - Term2.
+
+// 5. Final Sum
+modularity(Q) :-
+    Q = sum V : { comm_contribution(_, V) }.

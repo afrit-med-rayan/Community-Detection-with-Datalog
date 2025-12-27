@@ -92,6 +92,26 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
+
+        .controls-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        .controls-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .controls-box input[type=range] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 
@@ -113,6 +133,18 @@
                     <div class="stat-value" id="commCount">-</div>
                     <div class="stat-label">Communities Found</div>
                 </div>
+            </div>
+
+            <div class="controls-box">
+                <h4>Physics Controls</h4>
+                <label>Gravity: <span id="val-gravity">-2000</span></label>
+                <input type="range" id="gravity" min="-5000" max="-500" value="-2000" step="100">
+
+                <label>Spring Length: <span id="val-springLength">95</span></label>
+                <input type="range" id="springLength" min="50" max="300" value="95" step="5">
+
+                <label>Spring Constant: <span id="val-springConstant">0.04</span></label>
+                <input type="range" id="springConstant" min="0.01" max="0.5" value="0.04" step="0.01">
             </div>
 
             <div style="margin-top: auto; font-size: 12px; color: #888;">
@@ -196,6 +228,33 @@
             };
 
             network = new vis.Network(container, data, options);
+
+            // Initialize controls
+            document.getElementById('gravity').addEventListener('input', updatePhysics);
+            document.getElementById('springLength').addEventListener('input', updatePhysics);
+            document.getElementById('springConstant').addEventListener('input', updatePhysics);
+        }
+
+        function updatePhysics() {
+            var gravity = parseInt(document.getElementById('gravity').value);
+            var springLength = parseInt(document.getElementById('springLength').value);
+            var springConstant = parseFloat(document.getElementById('springConstant').value);
+
+            document.getElementById('val-gravity').innerText = gravity;
+            document.getElementById('val-springLength').innerText = springLength;
+            document.getElementById('val-springConstant').innerText = springConstant;
+
+            if (network) {
+                network.setOptions({
+                    physics: {
+                        barnesHut: {
+                            gravitationalConstant: gravity,
+                            springLength: springLength,
+                            springConstant: springConstant
+                        }
+                    }
+                });
+            }
         }
     </script>
 </body>

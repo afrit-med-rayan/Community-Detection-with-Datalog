@@ -24,19 +24,19 @@ def csv_to_facts(input_csv, output_dir):
     
     # Write node.facts
     node_file = os.path.join(output_dir, "node.facts")
-    with open(node_file, 'w') as f:
+    with open(node_file, 'w', newline='\n') as f:
         for node in sorted(list(nodes)):
             f.write(f"{node}\n")
     
-    # Write edge.facts (tab-separated)
+    # Write edge.facts (comma-separated now)
     edge_file = os.path.join(output_dir, "edge.facts")
-    with open(edge_file, 'w') as f:
+    with open(edge_file, 'w', newline='\n') as f:
         for source, target in edges:
-            f.write(f"{source}\t{target}\n")
+            f.write(f"{source},{target}\n")
     
     # Write config (max iterations)
     config_file = os.path.join(output_dir, "config_max_iter.facts")
-    with open(config_file, 'w') as f:
+    with open(config_file, 'w', newline='\n') as f:
         f.write("20\n")  # Max 20 iterations
     
     print(f"✓ Generated facts for {len(nodes)} nodes, {len(edges)} edges in '{output_dir}/'")

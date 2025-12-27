@@ -1,0 +1,25 @@
+// src/reachability.dl
+// Demonstrates Graph Traversal and Transitive Closure.
+// NOTE: This can be expensive on large graphs (O(n^3)).
+
+// --- Inputs ---
+.decl edge(x: symbol, y: symbol)
+.input edge
+
+// --- Outputs ---
+.decl reachable(x: symbol, y: symbol)
+.output reachable
+
+// --- Logic ---
+
+.decl link(x: symbol, y: symbol)
+link(X, Y) :- edge(X, Y).
+link(X, Y) :- edge(Y, X).
+
+// Base Case: Direct neighbors are reachable
+reachable(X, Y) :- link(X, Y).
+
+// Recursive Step: If X->Z and Z->Y, then X->Y
+reachable(X, Y) :-
+    link(X, Z),
+    reachable(Z, Y).

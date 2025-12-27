@@ -1,0 +1,59 @@
+// src/lpa_step.dl
+// Single Step of Label Propagation Algorithm (LPA)
+
+// --- Inputs ---
+.decl edge(x: symbol, y: symbol)
+.input edge(delimiter=",")
+
+.decl label(n: symbol, l: symbol)
+.input label(delimiter=",")
+
+// --- Outputs ---
+.decl label_new(n: symbol, l: symbol)
+.output label_new(delimiter=",")
+
+// --- Logic ---
+
+// Undirected view of the graph
+.decl link(x: symbol, y: symbol)
+link(X, Y) :- edge(X, Y).
+link(X, Y) :- edge(Y, X).
+
+// 1. Count label frequencies in neighborhood
+.decl label_counts(n: symbol, l: symbol, c: number)
+label_counts(N, L, C) :-
+    link(N, M),
+    label(M, L),
+    C = count : { link(N, M2), label(M2, L) }.
+
+// 2. Find maximum frequency for each node
+.decl max_freq(n: symbol, max_c: number)
+max_freq(N, MaxC) :-
+    label_counts(N, _, _),
+    MaxC = max C : { label_counts(N, _, C) }.
+
+// 3. Identify candidate labels (all that have max freq)
+.decl candidate_labels(n: symbol, l: symbol)
+candidate_labels(N, L) :-
+    max_freq(N, MaxC),
+    label_counts(N, L, MaxC).
+
+// 4. Tie-breaking: Smallest lexicographical label
+// "smaller_candidate_exists" is true if there is a 'BetterL' < 'L' in candidates
+.decl smaller_candidate_exists(n: symbol, l: symbol)
+smaller_candidate_exists(N, L) :-
+    candidate_labels(N, L),
+    candidate_labels(N, OtherL),
+    ord(OtherL) < ord(L).
+
+// The chosen label is the one where NO smaller candidate exists
+.decl next_label(n: symbol, l: symbol)
+next_label(N, L) :-
+    candidate_labels(N, L),
+    !smaller_candidate_exists(N, L).
+
+// 5. Update Rule
+// - If node has neighbors, it gets 'next_label'.
+// - If node has NO neighbors, it keeps its old label (no 'link' implies no 'label_counts').
+label_new(N, L) :- next_label(N, L).
+label_new(N, L) :- label(N, L), !link(N, _).
