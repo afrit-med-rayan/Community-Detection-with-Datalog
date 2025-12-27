@@ -16,8 +16,8 @@
     - [x] Create Sample Dataset (`data/karate.csv`) <!-- id: 12 -->
     - [x] Create `README.md` with installation and usage guide <!-- id: 13 -->
     - [x] **Git Repository Setup**
-        - [x] Initialize Git and Push to GitHub <!-- id: 14 -->
-        - [x] Create `requirements.txt` <!-- id: 15 -->
+    - [x] Initialize Git and Push to GitHub <!-- id: 14 -->
+    - [x] Create `requirements.txt` <!-- id: 15 -->
 - [x] **Reporting**
     - [x] Draft Full Academic Report (`report.md`) <!-- id: 16 -->
 - [x] **Containerization**
@@ -47,6 +47,6 @@
     - [x] Create Unit Tests `tests/test_datalog.py`
 
 ## 🎓 **Your Final Steps (Manual)**
-- [ ] **Execute Web App**
-    - Run `docker run -p 5000:5000 bda-datalog`
-    - Open `http://localhost:5000`
+- [x] **Execute Web App**
+    - [x] Run `docker-compose up --build`
+    - [x] Open `http://localhost:5000`

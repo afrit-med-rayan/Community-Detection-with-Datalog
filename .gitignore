@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Soufflé / Datalog
+facts/*.facts
+output/*.csv
+output/*.facts
+output/*.png
+
+# Docker
+.docker_data/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.metadata.json
