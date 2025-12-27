@@ -17,22 +17,46 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(FACTS_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Algorithm and Dataset Configuration
+ALGORITHMS = {
+    'lpa': {'file': 'src/lpa_step.dl', 'name': 'Label Propagation', 'iterative': True},
+    'cc': {'file': 'src/connected_components.dl', 'name': 'Connected Components', 'iterative': False},
+    'degree': {'file': 'src/degree_centrality.dl', 'name': 'Degree Centrality', 'iterative': False}
+}
+
+DATASETS = {
+    'karate': {'file': 'data/karate.csv', 'name': 'Karate Club', 'nodes': 34},
+    'dolphin': {'file': 'data/dolphin.csv', 'name': 'Dolphin Network', 'nodes': 62},
+    'lesmis': {'file': 'data/lesmis.csv', 'name': 'Les Misérables', 'nodes': 77},
+    'football': {'file': 'data/football.csv', 'name': 'Football', 'nodes': 31}
+}
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/run', methods=['POST'])
 def run_analysis():
-    # 1. Determine Input File
-    input_file = os.path.join(DATA_DIR, "karate.csv")
+    # Get parameters from request
+    data = request.get_json() or {}
+    algorithm = data.get('algorithm', 'lpa')
+    dataset = data.get('dataset', 'karate')
     
-    # Optional: Check if user uploaded a file? 
-    # For now, let's keep it simple: Use the karate file or regenerate it.
+    # Validate parameters
+    if algorithm not in ALGORITHMS:
+        return jsonify({"error": f"Unknown algorithm: {algorithm}"}), 400
+    if dataset not in DATASETS:
+        return jsonify({"error": f"Unknown dataset: {dataset}"}), 400
+    
+    # Get configuration
+    algo_config = ALGORITHMS[algorithm]
+    dataset_config = DATASETS[dataset]
+    
+    # 1. Determine Input File
+    input_file = dataset_config['file']
+    
     if not os.path.exists(input_file):
-        G = nx.karate_club_graph()
-        with open(input_file, "w") as f:
-             for u, v in G.edges():
-                 f.write(f"{u},{v}\n")
+        return jsonify({"error": f"Dataset file not found: {input_file}"}), 404
 
     # 2. Parse Data to Facts
     try:
@@ -40,8 +64,9 @@ def run_analysis():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    # 3. Run Soufflé (Iterative Label Propagation)
-    lpa_step_file = "src/lpa_step.dl"
+    # 3. Run Soufflé with selected algorithm
+    algorithm_file = algo_config['file']
+    is_iterative = algo_config['iterative']
     
     # Initialize labels: Each node is its own label
     node_file = os.path.join(FACTS_DIR, "node.facts")
@@ -93,17 +118,65 @@ def run_analysis():
     else:
         log(f"CRITICAL: edge.facts not found at {edge_fact_path}")
 
-    log(f"Starting Analysis. Nodes: {len(nodes)}, Initial Labels: {len(current_labels)}")
+    log(f"Starting Analysis with {algo_config['name']} on {dataset_config['name']}")
+    log(f"Nodes: {len(nodes)}, Algorithm: {algorithm}, Iterative: {is_iterative}")
 
-    for i in range(MAX_ITER):
-        # Write current labels to FACTS_DIR/label.facts
-        write_labels(current_labels, label_file)
+    if is_iterative:
+        # Iterative algorithm (LPA)
+        for i in range(MAX_ITER):
+            # Write current labels to FACTS_DIR/label.facts
+            write_labels(current_labels, label_file)
 
-        # Run one step
-        abs_lpa_file = os.path.abspath(lpa_step_file)
-        
-        # Use ABSOLUTE paths for -F and -D to avoid ambiguity
-        cmd = ["souffle", "-F", abs_facts_dir, "-D", abs_output_dir, abs_lpa_file]
+            # Run one step
+            abs_algorithm_file = os.path.abspath(algorithm_file)
+            
+            # Use ABSOLUTE paths for -F and -D to avoid ambiguity
+            cmd = ["souffle", "-F", abs_facts_dir, "-D", abs_output_dir, abs_algorithm_file]
+            
+            log(f"Iteration {i}: Running {' '.join(cmd)}")
+            
+            try:
+                result = subprocess.run(cmd, capture_output=True, check=True, text=True)
+                if result.stdout:
+                    log(f"Souffle stdout: {result.stdout[:200]}")
+                if result.stderr:
+                    log(f"Souffle stderr: {result.stderr[:200]}")
+            except subprocess.CalledProcessError as e:
+                 err_msg = f"Souffle Execution Failed at Iteration {i}. Stderr: {e.stderr}"
+                 log(err_msg)
+                 log(f"Souffle stdout: {e.stdout}")
+                 break
+
+            # Read new labels
+            output_label_file = os.path.join(abs_output_dir, "label_new.csv") 
+            
+            new_labels = {}
+            if os.path.exists(output_label_file):
+                log(f"Debug: label_new.csv exists, size={os.path.getsize(output_label_file)}")
+                with open(output_label_file, 'r') as f:
+                    reader = csv.reader(f, delimiter=',')
+                    for row in reader:
+                        if len(row) >= 2:
+                            new_labels[row[0]] = row[1]
+            else:
+                log(f"Debug: label_new.csv NOT FOUND at {output_label_file}")
+            
+            log(f"Iteration {i}: Computed {len(new_labels)} labels.")
+
+            if not new_labels:
+                log(f"Warning: No new labels generated in iteration {i}. Keeping previous labels.")
+                break
+
+            if new_labels == current_labels:
+                converged = True
+                log(f"Converged at iteration {i}")
+                break
+            
+            current_labels = new_labels
+    else:
+        # Non-iterative algorithm (Connected Components, Degree Centrality)
+        abs_algorithm_file = os.path.abspath(algorithm_file)
+        cmd = ["souffle", "-F", abs_facts_dir, "-D", abs_output_dir, abs_algorithm_file]
         
         log(f"Running: {' '.join(cmd)}")
         
@@ -114,37 +187,23 @@ def run_analysis():
             if result.stderr:
                 log(f"Souffle stderr: {result.stderr[:200]}")
         except subprocess.CalledProcessError as e:
-             err_msg = f"Souffle Execution Failed at Iteration {i}. Stderr: {e.stderr}"
-             log(err_msg)
-             log(f"Souffle stdout: {e.stdout}")
-             break
-
-        # Read new labels
-        output_label_file = os.path.join(abs_output_dir, "label_new.csv") 
+            err_msg = f"Souffle Execution Failed. Stderr: {e.stderr}"
+            log(err_msg)
+            return jsonify({"error": err_msg, "details": e.stdout}), 500
         
-        new_labels = {}
-        if os.path.exists(output_label_file):
-            log(f"Debug: label_new.csv exists, size={os.path.getsize(output_label_file)}")
-            with open(output_label_file, 'r') as f:
+        # Read output (component.csv or community.csv)
+        output_file = os.path.join(abs_output_dir, "component.csv") if algorithm == 'cc' else os.path.join(abs_output_dir, "community.csv")
+        
+        if os.path.exists(output_file):
+            log(f"Debug: Output file exists, size={os.path.getsize(output_file)}")
+            with open(output_file, 'r') as f:
                 reader = csv.reader(f, delimiter=',')
                 for row in reader:
                     if len(row) >= 2:
-                        new_labels[row[0]] = row[1]
+                        current_labels[row[0]] = row[1]
         else:
-            log(f"Debug: label_new.csv NOT FOUND at {output_label_file}")
-        
-        log(f"Iteration {i}: Computed {len(new_labels)} labels.")
+            log(f"Warning: Output file NOT FOUND at {output_file}")
 
-        if not new_labels:
-            log(f"Warning: No new labels generated in iteration {i}. Keeping previous labels.")
-            break
-
-        if new_labels == current_labels:
-            converged = True
-            log(f"Converged at iteration {i}")
-            break
-        
-        current_labels = new_labels
 
     # Write final community file
     community_file = os.path.join(abs_output_dir, "community.facts")
@@ -257,6 +316,8 @@ def run_analysis():
         "edges": edges,
         "modularity": round(modularity, 4),
         "community_count": len(comm_map),
+        "algorithm_used": algo_config['name'],
+        "dataset_used": dataset_config['name'],
         "debug_log": debug_log
     })
 

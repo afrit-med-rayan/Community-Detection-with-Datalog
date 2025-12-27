@@ -122,6 +122,27 @@
             <h1>Community Detection</h1>
             <p>Using <strong>Datalog</strong> & <strong>Soufflé</strong></p>
 
+            <div class="controls-box">
+                <h4>Algorithm Selection</h4>
+                <label>Algorithm:</label>
+                <select id="algorithmSelect" style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                    <option value="lpa" selected>Label Propagation (LPA)</option>
+                    <option value="cc">Connected Components</option>
+                    <option value="degree">Degree Centrality</option>
+                </select>
+            </div>
+
+            <div class="controls-box">
+                <h4>Dataset Selection</h4>
+                <label>Graph:</label>
+                <select id="datasetSelect" style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                    <option value="karate" selected>Karate Club (34 nodes)</option>
+                    <option value="dolphin">Dolphin Network (62 nodes)</option>
+                    <option value="lesmis">Les Misérables (77 nodes)</option>
+                    <option value="football">Football (31 nodes)</option>
+                </select>
+            </div>
+
             <button onclick="runAnalysis()">Run Detection</button>
 
             <div id="stats" style="display:none">
@@ -132,6 +153,10 @@
                 <div class="stat-box">
                     <div class="stat-value" id="commCount">-</div>
                     <div class="stat-label">Communities Found</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="algoInfo" style="font-size: 14px;">-</div>
+                    <div class="stat-label">Algorithm & Dataset</div>
                 </div>
             </div>
 
@@ -164,9 +189,16 @@
         var network = null;
 
         function runAnalysis() {
+            const algorithm = document.getElementById('algorithmSelect').value;
+            const dataset = document.getElementById('datasetSelect').value;
+
             document.getElementById('loading').style.display = 'block';
 
-            fetch('/run', { method: 'POST' })
+            fetch('/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ algorithm, dataset })
+            })
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('loading').style.display = 'none';
@@ -180,6 +212,7 @@
                     document.getElementById('stats').style.display = 'block';
                     document.getElementById('modScore').innerText = data.modularity;
                     document.getElementById('commCount').innerText = data.community_count;
+                    document.getElementById('algoInfo').innerText = data.algorithm_used + " on " + data.dataset_used;
 
                     // Render Graph
                     renderGraph(data.nodes, data.edges);

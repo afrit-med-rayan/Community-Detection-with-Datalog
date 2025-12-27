@@ -1,0 +1,50 @@
+// src/degree_centrality.dl
+// Degree Centrality Algorithm - Simple node degree ranking
+// Alternative to complex betweenness calculations
+
+// --- Inputs ---
+.decl edge(x: symbol, y: symbol)
+.input edge(delimiter=",")
+
+// --- Outputs ---
+.decl community(n: symbol, c: symbol)
+.output community(delimiter=",")
+
+.decl centrality_score(n: symbol, score: number)
+.output centrality_score(delimiter=",")
+
+// --- Logic ---
+
+// 1. Undirected link
+.decl link(x: symbol, y: symbol)
+link(X, Y) :- edge(X, Y).
+link(X, Y) :- edge(Y, X).
+
+// 2. Calculate degree for each node
+.decl degree(n: symbol, d: number)
+degree(N, D) :-
+    link(N, _),
+    D = count : { link(N, _) }.
+
+// 3. Centrality score (normalized degree)
+centrality_score(N, D) :- degree(N, D).
+
+// 4. Community assignment based on degree tiers
+// High degree nodes (hubs) get one community, low degree get another
+.decl avg_degree(avg: number)
+avg_degree(Avg) :-
+    TotalDegree = sum D : { degree(_, D) },
+    NodeCount = count : { degree(_, _) },
+    NodeCount > 0,
+    Avg = TotalDegree / NodeCount.
+
+// Assign communities based on whether degree is above or below average
+community(N, "high") :-
+    degree(N, D),
+    avg_degree(Avg),
+    D >= Avg.
+
+community(N, "low") :-
+    degree(N, D),
+    avg_degree(Avg),
+    D < Avg.
