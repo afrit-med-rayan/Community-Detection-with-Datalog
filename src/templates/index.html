@@ -5,37 +5,48 @@
     <title>Datalog Community Detection</title>
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
-            background: #f0f2f5;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
-            gap: 20px;
-            height: 90vh;
+            gap: 24px;
+            height: calc(100vh - 40px);
         }
 
         .sidebar {
-            flex: 0 0 300px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            flex: 0 0 340px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
         }
 
         .main {
             flex: 1;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             position: relative;
+            overflow: hidden;
         }
 
         #mynetwork {
@@ -43,42 +54,123 @@
             height: 100%;
         }
 
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .controls-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .controls-box h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .controls-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .controls-box select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls-box select:hover {
+            border-color: #667eea;
+        }
+
+        .controls-box select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         button {
-            padding: 10px 20px;
-            background: #007bff;
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
-            transition: background 0.2s;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         button:hover {
-            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #stats {
+            display: none;
         }
 
         .stat-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .stat-box:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
         }
 
         .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
         }
 
         .stat-label {
-            font-size: 14px;
-            color: #666;
-        }
-
-        h1 {
-            margin-top: 0;
-            font-size: 24px;
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
         }
 
         .loading {
@@ -87,30 +179,77 @@
             left: 50%;
             transform: translate(-50%, -50%);
             display: none;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .controls-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
-
-        .controls-box label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 32px 48px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            font-size: 16px;
+            color: #374151;
             font-weight: 500;
+        }
+
+        .loading::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 40px;
+            margin: 16px auto 0;
+            border: 4px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .controls-box input[type=range] {
             width: 100%;
-            margin-bottom: 10px;
+            margin: 8px 0;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+        }
+
+        .controls-box input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .controls-box input[type=range]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .footer-info {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 11px;
+            color: #9ca3af;
+            line-height: 1.6;
+        }
+
+        .footer-info strong {
+            color: #667eea;
         }
     </style>
 </head>
@@ -125,7 +264,7 @@
             <div class="controls-box">
                 <h4>Algorithm Selection</h4>
                 <label>Algorithm:</label>
-                <select id="algorithmSelect" style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                <select id="algorithmSelect">
                     <option value="lpa" selected>Label Propagation (LPA)</option>
                     <option value="cc">Connected Components</option>
                     <option value="degree">Degree Centrality</option>
@@ -135,7 +274,7 @@
             <div class="controls-box">
                 <h4>Dataset Selection</h4>
                 <label>Graph:</label>
-                <select id="datasetSelect" style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                <select id="datasetSelect">
                     <option value="karate" selected>Karate Club (34 nodes)</option>
                     <option value="dolphin">Dolphin Network (62 nodes)</option>
                     <option value="lesmis">Les Misérables (77 nodes)</option>
@@ -145,7 +284,7 @@
 
             <button onclick="runAnalysis()">Run Detection</button>
 
-            <div id="stats" style="display:none">
+            <div id="stats">
                 <div class="stat-box">
                     <div class="stat-value" id="modScore">-</div>
                     <div class="stat-label">Modularity Score</div>
@@ -155,7 +294,7 @@
                     <div class="stat-label">Communities Found</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value" id="algoInfo" style="font-size: 14px;">-</div>
+                    <div class="stat-value" id="algoInfo" style="font-size: 18px;">-</div>
                     <div class="stat-label">Algorithm & Dataset</div>
                 </div>
             </div>
@@ -172,10 +311,10 @@
                 <input type="range" id="springConstant" min="0.01" max="0.5" value="0.04" step="0.01">
             </div>
 
-            <div style="margin-top: auto; font-size: 12px; color: #888;">
-                Algorithm: Connected Components<br>
-                Engine: Soufflé 2.x<br>
-                Backend: Python/Flask
+            <div class="footer-info">
+                <strong>Engine:</strong> Soufflé 2.x<br>
+                <strong>Backend:</strong> Python/Flask<br>
+                <strong>Frontend:</strong> Vis.js Network
             </div>
         </div>
 

@@ -26,12 +26,19 @@ reachable(X, Y) :- link(X, Z), reachable(Z, Y).
 reachable(X, X) :- link(X, _).
 reachable(X, X) :- link(_, X).
 
-// 4. Component assignment: Use the lexicographically smallest reachable node as component ID
-// This ensures all nodes in the same component get the same label
-.decl min_reachable(n: symbol, min_node: symbol)
-min_reachable(N, MinNode) :-
-    reachable(N, _),
-    MinNode = min M : { reachable(N, M) }.
+// 4. Component assignment: Find the lexicographically smallest reachable node
+// Use a helper to check if there's a smaller reachable node
+.decl has_smaller_reachable(n: symbol, candidate: symbol)
+has_smaller_reachable(N, Candidate) :-
+    reachable(N, Candidate),
+    reachable(N, Smaller),
+    ord(Smaller) < ord(Candidate).
 
-// 5. Final component assignment
-component(N, C) :- min_reachable(N, C).
+// 5. Component ID is the reachable node with no smaller reachable node
+.decl component_id(n: symbol, c: symbol)
+component_id(N, C) :-
+    reachable(N, C),
+    !has_smaller_reachable(N, C).
+
+// 6. Final component assignment
+component(N, C) :- component_id(N, C).
