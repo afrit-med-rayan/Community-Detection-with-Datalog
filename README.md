@@ -36,9 +36,22 @@ If you prefer running locally without Docker:
     python src/app.py
     ```
 
-## 🧪 Algorithm
+## 🧪 Algorithms
 
-We use a **Connected Components** algorithm implemented in pure Stratified Datalog (`src/cc_algorithm.dl`). This declarative approach ensures correctness and parallel scalability without complex imperative state management.
+We support multiple community detection algorithms implemented in pure Datalog:
+
+1. **Label Propagation (LPA)**: Iterative label assignment based on neighbor majority
+2. **Connected Components**: Transitive closure-based component detection
+3. **Degree Centrality**: Hub detection via node degree tiers
+
+## 📊 Datasets
+
+- **Karate Club** (34 nodes): Classic social network benchmark
+- **Dolphin Network** (62 nodes): Marine mammal social interactions
+- **Les Misérables** (77 nodes): Character co-appearance network
+- **Football** (31 nodes): Team games network
+
+Select algorithms and datasets dynamically through the web interface!
 
 ## 📄 License
 
