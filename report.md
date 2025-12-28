@@ -1,6 +1,6 @@
 # Community Detection in Social Networks Using Datalog
 
-**Author:** [Your Name]  
+**Author:** Afrit Med Rayan  
 **Date:** December 2025  
 **Course:** Big Data Analytics / BDA Project  
 
