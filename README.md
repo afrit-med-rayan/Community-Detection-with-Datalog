@@ -94,4 +94,4 @@ python -m pytest tests/test_datalog.py
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-**Author:** [Your Name] | **Course:** Big Data Analytics Project 2025
+**Author:** Afrit Med Rayan | **Course:** Big Data Analytics Project 2025
