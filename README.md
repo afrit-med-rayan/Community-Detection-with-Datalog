@@ -92,7 +92,8 @@ python -m pytest tests/test_datalog.py
 
 ## 📄 Documentation
 
-- [**Rapport Académique (PDF/TeX)**](docs/rapport_final.tex) : Fondements théoriques, méthodologie et analyse des résultats.
+- [**Rapport Académique (PDF)**](docs/bda_repport.pdf) : Version finale du rapport (Recherche, Méthodologie, Résultats).
+- [**Source LaTeX**](docs/rapport_final.tex) : Code source pour la compilation du rapport.
 
 ---
 

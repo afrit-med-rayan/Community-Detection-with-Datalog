@@ -54,31 +54,42 @@
 }
 
 % --- Titre ---
-\title{
-    \vspace{2cm}
-    \includegraphics[width=0.4\textwidth]{example-image-a}\\[1cm]
-    {\Huge \textbf{Détection de Communautés dans les Réseaux Sociaux via Datalog}}\\
-    \vspace{0.5cm}
-    {\large Une approche déclarative pour l'analyse de grands graphes}\\
-    \vspace{2cm}
-}
-\author{
-    \textbf{Présenté par :}\\
-    Afrit Mohamed Rayan\\
-    \vspace{1cm}
-    \textbf{Sous la direction de :}\\
-    Mme. Sabri\\
-    \vspace{2cm}
-}
-\date{
-    \textbf{Cours :} Big Data Analytics 2025\\
-    \textbf{Date :} \today
-}
+
 
 % --- Début du document ---
 \begin{document}
 
-\maketitle
+% \maketitle
+
+\begin{center}
+
+    {\Large \textbf{UNIVERSITÉ DE BOUMERDÈS}}\\
+    \vspace{0.2cm}
+    {\large \textbf{Département d’Informatique}}\\
+    
+    \vspace{2cm}
+
+    {\Huge \textbf{Détection de Communautés dans les Réseaux Sociaux via Datalog}}\\
+    \vspace{0.5cm}
+    {\large Une approche déclarative pour l'analyse de grands graphes}\\
+    
+    \vspace{2cm}
+
+    \textbf{Présenté par :}\\
+    Afrit Mohamed Rayan\\
+    
+    \vspace{1cm}
+
+    \textbf{Sous la direction de :}\\
+    Mr. C. Salmi\\
+    
+    \vspace{2cm}
+
+    \textbf{Cours :} Logique et Bases de Données\\
+    \textbf{Date :} \today
+
+\end{center}
+
 
 \begin{abstract}
 Ce rapport explore l'application du langage de programmation logique \textbf{Datalog} pour la détection de communautés dans les réseaux sociaux. Contrairement aux approches impératives traditionnelles, Datalog permet d'exprimer des algorithmes complexes, tels que la \textbf{Propagation de Labels (LPA)}, les \textbf{Composantes Connexes}, et la \textbf{Centralité de Degré}, de manière purement déclarative. En utilisant le moteur de haute performance \textbf{Soufflé}, nous démontrons comment la logique récursive facilite l'analyse structurelle des graphes tout en garantissant une parallélisation efficace. Les résultats, évalués via la métrique de \textbf{Modularité}, confirment que Datalog offre une alternative concise et rigoureuse pour le traitement des données massives issues des réseaux sociaux.
@@ -253,21 +264,21 @@ Cette section présente les visuels de l'application développée, illustrant le
 
 \begin{figure}[h!]
     \centering
-    %\includegraphics[width=0.8\textwidth]{images/screenshot_dashboard.png}
+    \includegraphics[width=0.8\textwidth]{dashboard.png}
     \caption{Tableau de bord principal affichant le graphe du Karaté Club avec les communautés détectées.}
     \label{fig:dashboard}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    %\includegraphics[width=0.8\textwidth]{images/screenshot_lpa.png}
+    \includegraphics[width=0.8\textwidth]{d1.png}
     \caption{Visualisation de l'algorithme de Propagation de Labels (LPA) en cours d'exécution.}
     \label{fig:lpa_viz}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    %\includegraphics[width=0.8\textwidth]{images/screenshot_stats.png}
+    \includegraphics[width=0.8\textwidth]{d2.png}
     \caption{Statistiques du réseau et calcul de la modularité via le moteur Soufflé.}
     \label{fig:stats_viz}
 \end{figure}
@@ -359,3 +370,4 @@ Pallets Projects,
 \end{thebibliography}
 
 \end{document}
+
