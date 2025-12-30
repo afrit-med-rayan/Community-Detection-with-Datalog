@@ -19,3 +19,4 @@ output/*.png
 .idea/
 .DS_Store
 *.metadata.json
+task.md
